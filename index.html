@@ -10,55 +10,64 @@
         .tab-btn { background: #334155; border: none; padding: 10px; color: white; cursor: pointer; border-radius: 5px; }
         .tab-btn.active { background: #eab308; color: black; font-weight: bold; }
         .match-card { background: #1e293b; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #334155; }
+        button:disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
         button { background: #eab308; border: none; padding: 10px; margin: 5px; cursor: pointer; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>جدول مباريات كأس العالم 2026 الكامل</h1>
+        <h1>جدول مباريات كأس العالم 2026</h1>
         <div class="tabs" id="tabs"></div>
         <div id="matchesContainer"></div>
     </div>
 
     <script>
+        // إعدادات العقد
+        const CONTRACT_ADDRESS = "0xYourContractAddressHere";
+        const CONTRACT_ABI = [...]; // ضع الـ ABI الذي أرفقته هنا
+
         const allMatches = [
-            // (لقد قمت بدمج الجدول الذي أرسلته مسبقاً وتكملته منطقياً للأدوار التالية)
-            { id: 0, phase: "دور المجموعات", name: "المكسيك ضد جنوب أفريقيا", time: "2026-06-11" },
-            { id: 71, phase: "دور المجموعات", name: "الجزائر ضد النمسا", time: "2026-06-28" },
-            { id: 72, phase: "دور الـ 16", name: "أوائل المجموعات ضد الثواني", time: "2026-06-29" },
-            { id: 73, phase: "ربع النهائي", name: "المتأهلون من دور الـ 16", time: "2026-07-04" },
-            { id: 74, phase: "نصف النهائي", name: "المتأهلون من ربع النهائي", time: "2026-07-08" },
-            { id: 75, phase: "النهائي", name: "النهائي الكبير", time: "2026-07-12" }
+            { id: 0, phase: "دور المجموعات", name: "المكسيك ضد جنوب أفريقيا", time: "2026-06-11T15:00:00" },
+            { id: 71, phase: "دور المجموعات", name: "الجزائر ضد النمسا", time: "2026-06-28T18:00:00" }
         ];
 
-        function renderMatches(phase) {
-            const container = document.getElementById('matchesContainer');
-            container.innerHTML = `<h2>${phase}</h2>`;
-            allMatches.filter(m => m.phase === phase).forEach(match => {
-                container.innerHTML += `
-                    <div class="match-card">
-                        <p><strong>${match.name}</strong> - ${match.time}</p>
-                        <button onclick="predict(${match.id}, 1)">فوز الفريق 1</button>
-                        <button onclick="predict(${match.id}, 2)">تعادل</button>
-                        <button onclick="predict(${match.id}, 3)">فوز الفريق 2</button>
-                    </div>
-                `;
+        function isPredictionOpen(matchTimeStr) {
+            const now = new Date().getTime();
+            const matchTime = new Date(matchTimeStr).getTime();
+            const startLimit = matchTime - (24 * 60 * 60 * 1000); // قبل 24 ساعة
+            const endLimit = matchTime - (30 * 60 * 1000);       // قبل 30 دقيقة
+            return now >= startLimit && now <= endLimit;
+        }
+function renderMatches(phase) {
+    const container = document.getElementById('matchesContainer');
+    container.innerHTML = `<h2>${phase}</h2>`;
+    
+    allMatches.filter(m => m.phase === phase).forEach(match => {
+        // هنا نستخدم الدالة التي لا تريد مسحها
+        const open = isPredictionOpen(match.time);
+        
+        container.innerHTML += `
+            <div class="match-card">
+                <p><strong>${match.name}</strong> - ${match.time}</p>
+                
+                <button ${!open ? 'disabled' : ''} onclick="predict(${match.id}, 1)">فوز الفريق 1</button>
+                <button ${!open ? 'disabled' : ''} onclick="predict(${match.id}, 2)">تعادل</button>
+                <button ${!open ? 'disabled' : ''} onclick="predict(${match.id}, 3)">فوز الفريق 2</button>
+                
+                ${!open ? '<p style="font-size:12px; color:gray;">التوقع غير متاح حالياً</p>' : ''}
+            </div>
+        `;
             });
         }
 
-        const phases = ["دور المجموعات", "دور الـ 16", "ربع النهائي", "نصف النهائي", "النهائي"];
-        const tabContainer = document.getElementById('tabs');
-        phases.forEach(p => {
-            const btn = document.createElement('button');
-            btn.className = 'tab-btn';
-            btn.innerText = p;
-            btn.onclick = () => renderMatches(p);
-            tabContainer.appendChild(btn);
-        });
+        // ... (باقي الكود الخاص بإنشاء الأزرار) ...
+        
+        async function predict(id, val) {
+            alert("جارٍ الاتصال بالمحفظة لإرسال التوقع رقم: " + id);
+            // هنا ستستخدم ethers.js لاحقاً لاستدعاء placePrediction
+        }
 
         renderMatches("دور المجموعات");
-
-        function predict(id, val) { alert("تم تسجيل التوقع للمباراة رقم " + id); }
     </script>
 </body>
 </html>
